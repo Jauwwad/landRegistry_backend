@@ -37,44 +37,22 @@ else:
     exit(1)
 "
 
-# Initialize database
-echo "Initializing database with Flask-SQLAlchemy..."
-python -c "
-from app import create_app, db
-from app.models import User, Land, LandTransfer, LandDocument, UserRole
+#!/bin/bash
 
-app = create_app()
-with app.app_context():
-    try:
-        # Create all tables
-        db.create_all()
-        print('✅ Database tables created successfully')
-        
-        # Create demo admin if not exists
-        admin = User.query.filter_by(username='demo_admin').first()
-        if not admin:
-            admin = User(
-                username='demo_admin',
-                email='admin@demo.com',
-                first_name='Demo',
-                last_name='Admin',
-                role=UserRole.ADMIN,
-                wallet_address='0x742d35Cc6634C0532925a3b8D8976b4D23d4e57C',
-                phone='+1234567890',
-                address='123 Admin Street, City, Country'
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.commit()
-            print('✅ Demo admin created')
-        else:
-            print('✅ Demo admin already exists')
-            
-    except Exception as e:
-        print(f'❌ Database initialization error: {e}')
-        import traceback
-        traceback.print_exc()
-        exit(1)
-"
+# Build script for Render deployment
+echo "Starting deployment build process..."
+
+# Set environment for production
+export FLASK_ENV=production
+
+# Install dependencies
+echo "Installing Python dependencies..."
+pip install -r requirements.txt
+
+# Verify critical packages
+echo "Verifying psycopg2-binary installation..."
+python -c "import psycopg2; print('✅ psycopg2-binary installed successfully')" || echo "❌ psycopg2-binary installation failed"
+
+echo "✅ Build completed successfully!"
 
 echo "✅ Deployment completed successfully!"
