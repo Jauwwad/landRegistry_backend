@@ -24,30 +24,17 @@ def create_app():
     
     # Database configuration with fallback
     database_url = os.getenv('DATABASE_URL')
-    if database_url:
-        # Handle both psycopg2 and psycopg3 URL formats
-        if database_url.startswith('postgres://'):
-            # Convert postgres:// to postgresql:// for compatibility
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        elif database_url.startswith('postgresql://') and 'psycopg' not in database_url:
-            # For psycopg3, we might need to specify the driver
-            # but SQLAlchemy 2.0+ should auto-detect psycopg3
-            pass
+    if database_url and database_url.startswith('postgres://'):
+        # Fix for SQLAlchemy 1.4+ compatibility
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
     
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # Engine options for better connection handling
-    engine_options = {
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
+        'connect_args': {'sslmode': 'require'} if 'neon.tech' in (database_url or '') else {}
     }
-    
-    # Add SSL configuration for external databases like Neon
-    if database_url and ('neon.tech' in database_url or 'amazonaws.com' in database_url):
-        engine_options['connect_args'] = {'sslmode': 'require'}
-    
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
     
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-string')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 3600))

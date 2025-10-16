@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build script for Render deployment
-echo "Starting deployment with Python 3.13 and psycopg3..."
+echo "Starting deployment with Python 3.11 and psycopg2-binary..."
 
 # Install dependencies
 echo "Installing Python dependencies..."
@@ -15,28 +15,20 @@ export FLASK_ENV=production
 echo "Testing database connection..."
 python -c "
 import os
-import psycopg
+import psycopg2
 from urllib.parse import urlparse
 
 database_url = os.getenv('DATABASE_URL')
 if database_url:
     try:
-        # Parse the URL for psycopg3
-        parsed = urlparse(database_url)
-        conn_params = {
-            'host': parsed.hostname,
-            'port': parsed.port or 5432,
-            'dbname': parsed.path[1:],  # Remove leading /
-            'user': parsed.username,
-            'password': parsed.password,
-            'sslmode': 'require'
-        }
-        
-        with psycopg.connect(**conn_params) as conn:
-            with conn.cursor() as cur:
-                cur.execute('SELECT version()')
-                version = cur.fetchone()
-                print(f'✅ Database connection successful: {version[0][:50]}...')
+        # Test connection with psycopg2
+        conn = psycopg2.connect(database_url)
+        cur = conn.cursor()
+        cur.execute('SELECT version()')
+        version = cur.fetchone()
+        print(f'✅ Database connection successful: {version[0][:50]}...')
+        cur.close()
+        conn.close()
     except Exception as e:
         print(f'❌ Database connection test failed: {e}')
         exit(1)
