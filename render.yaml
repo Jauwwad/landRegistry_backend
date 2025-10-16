@@ -4,8 +4,9 @@ services:
     env: python
     region: oregon
     plan: free
+    runtime: python
     buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level info
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
@@ -21,3 +22,4 @@ services:
         fromDatabase:
           name: land-registry-db
           property: connectionString
+    healthCheckPath: /health
